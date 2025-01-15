@@ -63,3 +63,44 @@ class IteratedPrisonersDilemmaEnv(gym.Env):
             "last_decision": np.array(last_decision, dtype=np.int8),
             "history": history
         }
+    
+    def reset(self):
+        # Reset the game state
+        self.current_round = 0
+        self.agent_history = []  # Clear agent's decision history
+        self.opponent_history = []  # Clear opponent's decision history
+
+        # Return the initial observation
+        return self._get_observation()
+    
+    def step(self, action):
+    # Ensure action is either 0 or 1 (coop or defect)
+        if action not in [0, 1]:
+            raise ValueError("Action must be 0 (Cooperate) or 1 (Defect)")
+
+        # If this is the first round, let the opponent make the first decision
+        if self.current_round == 0:
+            # Opponent makes the first move based on its strategy
+            opponent_action = self.opponent_strategies[0](None)  # No previous action at the start
+        else:
+            # In subsequent rounds, the opponent's decision is based on the agent's previous move
+            opponent_action = self.opponent_strategies[0](self.agent_history[-1])
+
+        # Append the agent's action and opponent's action to the history
+        self.agent_history.append(action)
+        self.opponent_history.append(opponent_action)
+
+        # Calculate the reward based on the current round's decisions
+        agent_reward, opponent_reward = self.reward_matrix[(action, opponent_action)]
+
+        # Increment the round
+        self.current_round += 1
+
+        # Check if the game has ended
+        done = self.current_round >= self.num_rounds
+
+        # Get the observation after the action
+        observation = self._get_observation()
+
+        # Return observation, reward, done flag, and any additional info
+        return observation, agent_reward, done, {}
