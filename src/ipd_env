@@ -10,10 +10,7 @@ class IteratedPrisonersDilemmaEnv(gym.Env):
         self.action_space = spaces.Discrete(2)
 
         #MultiDiscrete space: Array with Agent and Opponent decision
-        self.observation_space = spaces.Dict({
-            "last_decision": spaces.MultiDiscrete([2, 2]),  # Agent's last action, Opponent's last action
-            "history": spaces.MultiBinary(self.num_rounds * 2),  # Full history
-        })
+        self.observation_space = spaces.MultiDiscrete([2, 2])
 
         #Environment configuration
         self.num_rounds = num_rounds
@@ -50,25 +47,16 @@ class IteratedPrisonersDilemmaEnv(gym.Env):
         last_opponent_action = self.opponent_history[-1] if self.opponent_history else 0
         last_decision = [last_agent_action, last_opponent_action]
         
-        # Full history (context)
-        """ 
-        This history is probably not get addressed by a simple Q-learning agent, instead it will
-        be driven it's decisions entirely by the last decisions (the compact state)
-        """
-        agent_padded = self.agent_history + [-1] * (self.num_rounds - len(self.agent_history))
-        opponent_padded = self.opponent_history + [-1] * (self.num_rounds - len(self.opponent_history))
-        history = np.array(agent_padded + opponent_padded, dtype=np.int8)
-        
-        return {
-            "last_decision": np.array(last_decision, dtype=np.int8),
-            "history": history
-        }
+        return last_decision
     
     def reset(self):
         # Reset the game state
         self.current_round = 0
         self.agent_history = []  # Clear agent's decision history
         self.opponent_history = []  # Clear opponent's decision history
+
+        # Select a random opponent strategy for the new episode
+        self.current_opponent = np.random.choice(self.opponent_strategies)
 
         # Return the initial observation
         return self._get_observation()
@@ -81,10 +69,10 @@ class IteratedPrisonersDilemmaEnv(gym.Env):
         # If this is the first round, let the opponent make the first decision
         if self.current_round == 0:
             # Opponent makes the first move based on its strategy
-            opponent_action = self.opponent_strategies[0](None)  # No previous action at the start
+            opponent_action = self.current_opponent(None)  # No previous action at the start
         else:
             # In subsequent rounds, the opponent's decision is based on the agent's previous move
-            opponent_action = self.opponent_strategies[0](self.agent_history[-1])
+            opponent_action = self.current_opponent(self.agent_history[-1])
 
         # Append the agent's action and opponent's action to the history
         self.agent_history.append(action)
@@ -104,3 +92,11 @@ class IteratedPrisonersDilemmaEnv(gym.Env):
 
         # Return observation, reward, done flag, and any additional info
         return observation, agent_reward, done, {}
+
+    def render(self):
+        """
+        Print current game history.
+        """
+        print(f"Round: {self.current_round}")
+        print(f"Agent History: {self.agent_history}")
+        print(f"Opponent History: {self.opponent_history}")
