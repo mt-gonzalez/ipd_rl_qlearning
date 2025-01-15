@@ -1,0 +1,13 @@
+name: ipd_rl_qlearning
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.12.7
+  - numpy
+  - matplotlib
+  - seaborn
+  - pandas
+  - pytest
+  - jupyterlab
+  - gymnasium
