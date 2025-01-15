@@ -10,7 +10,10 @@ class IteratedPrisonersDilemmaEnv(gym.Env):
         self.action_space = spaces.Discrete(2)
 
         #MultiDiscrete space: Array with Agent and Opponent decision
-        self.observation_space = spaces.MultiDiscrete([2, 2])
+        self.observation_space = spaces.Dict({
+            "last_decision": spaces.MultiDiscrete([2, 2]),  # Agent's last action, Opponent's last action
+            "history": spaces.MultiBinary(self.num_rounds * 2),  # Full history
+        })
 
         #Environment configuration
         self.num_rounds = num_rounds
@@ -37,8 +40,26 @@ class IteratedPrisonersDilemmaEnv(gym.Env):
             (1, 1): (self.P, self.P)   # Both defect
         }
 
-    def tit_for_tat(agent_last_action):
+    def tit_for_tat(self, agent_last_action):
         """Copies last Agent decision. Coop if decide first."""
         return 0 if agent_last_action is None else agent_last_action
 
-    #I want to get the agent last action, I will pass it in the .step method later.
+    def _get_observation(self):
+        # Last decisions (compact state)
+        last_agent_action = self.agent_history[-1] if self.agent_history else 0
+        last_opponent_action = self.opponent_history[-1] if self.opponent_history else 0
+        last_decision = [last_agent_action, last_opponent_action]
+        
+        # Full history (context)
+        """ 
+        This history is probably not get addressed by a simple Q-learning agent, instead it will
+        be driven it's decisions entirely by the last decisions (the compact state)
+        """
+        agent_padded = self.agent_history + [-1] * (self.num_rounds - len(self.agent_history))
+        opponent_padded = self.opponent_history + [-1] * (self.num_rounds - len(self.opponent_history))
+        history = np.array(agent_padded + opponent_padded, dtype=np.int8)
+        
+        return {
+            "last_decision": np.array(last_decision, dtype=np.int8),
+            "history": history
+        }
