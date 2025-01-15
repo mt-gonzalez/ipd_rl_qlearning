@@ -13,15 +13,6 @@ The main goals of this project are:
 - To train an AI agent to play the game and evaluate its performance.
 - To gain insights into how the AI adapts and learns in this context.
 
-Objective
-
-The main goals of this project are:
-
-    To develop an Iterated Prisoner's Dilemma game environment.
-    To implement various well-known strategies for the game.
-    To train an AI agent to play the game and evaluate its performance.
-    To gain insights into how the AI adapts and learns in this context.
-
 ## Environment Setup ##
 
 This project uses a Conda environment to simplify dependency management. You can find all necessary dependencies listed in the environment.yml file for easy setup.
