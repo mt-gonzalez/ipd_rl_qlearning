@@ -14,6 +14,7 @@ class IteratedPrisonersDilemmaEnv(gym.Env):
 
         #Environment configuration
         self.num_rounds = num_rounds
+        self.R, self.T, self.S, self.P = R, T, S, P #Reward, Temptation, Sucker, Penalty
         self.current_round = 0
         self.agent_history = []  #Agent decision history
         self.opponent_history = []  #Opponent decision history
@@ -26,14 +27,14 @@ class IteratedPrisonersDilemmaEnv(gym.Env):
         else:
             self.opponent_strategies = opponent_strategies
         
-        self.current_opponent = None  # Estrategia actual del oponente
+        self.current_opponent = None  # Actual opponent strategy
 
         #Reward matrix (coop, betray)
-        reward_matrix = {
-            (0, 0): (self.R, self.R),  # Ambos cooperan
-            (0, 1): (self.S, self.T),  # Agente coopera, oponente traiciona
-            (1, 0): (self.T, self.S),  # Agente traiciona, oponente coopera
-            (1, 1): (self.P, self.P)   # Ambos traicionan
+        self.reward_matrix = {
+            (0, 0): (self.R, self.R),  # Both coop
+            (0, 1): (self.S, self.T),  # Agent coop, opponent defects
+            (1, 0): (self.T, self.S),  # Agent defects, opponent coop
+            (1, 1): (self.P, self.P)   # Both defect
         }
 
     def tit_for_tat(agent_last_action):
